@@ -910,7 +910,7 @@ const pages = [
 const pdfContent = [
   {
     title: "Introdução e História",
-    body: "INTRODUÇÃO\nA Copa do Mundo é o maior campeonato de futebol do planeta. Organizada pela FIFA, acontece a cada quatro anos, reunindo as melhores seleções nacionais em busca do título mundial. Além de esporte, promove a união entre povos e culturas, reunindo bilhões de telespectadores.\n\nHISTÓRIA\nA primeira Copa aconteceu em 1930, no Uruguai, com apenas 13 seleções. Com o tempo cresceu e ganhou lendas como Pelé, Maradona, Ronaldo Fenômeno, Zidane, Ronaldinho, Messi e Cristiano Ronaldo.\n\nCOMO FUNCIONA\nAs seleções disputam eliminatórias para garantir uma vaga. Na fase final jogam em grupos e os melhores avançam para: Oitavas → Quartas → Semifinal → Final. O campeão recebe a Taça FIFA, de ouro, pesando cerca de 6 kg."
+    body: "INTRODUÇÃO\nA Copa do Mundo é o maior campeonato de futebol do planeta. Organizada pela FIFA, acontece a cada quatro anos, reunindo as melhores seleções nacionais em busca do título mundial. Além de esporte, promove a união entre povos e culturas, reunindo bilhões de telespectadores.\n\nHISTÓRIA\nA primeira Copa aconteceu em 1930, no Uruguai, com apenas 13 seleções. Com o tempo cresceu e ganhou lendas como Pelé, Maradona, Ronaldo Fenômeno, Zidane, Ronaldinho, Messi e Cristiano Ronaldo.\n\nCOMO FUNCIONA\nAs seleções disputam eliminatórias para garantir uma vaga. Na fase final jogam em grupos e os melhores avançam: Oitavas de final, Quartas de final, Semifinal e Final. O campeão recebe a Taca FIFA, de ouro, pesando cerca de 6 kg."
   },
   {
     title: "Copa 2026 e O Brasil",
@@ -1116,14 +1116,9 @@ function downloadPdf(){
       doc.setFillColor(...CREAM);
       doc.rect(0, 0, PW, PH, 'F');
 
-      // Margem de papel com sombra
+      // Margem lateral decorativa
       doc.setFillColor(235, 228, 208);
       doc.rect(MX-4, 0, 4, PH, 'F');
-
-      // Linha vermelha de margem (caderno)
-      doc.setDrawColor(220, 80, 80);
-      doc.setLineWidth(0.5);
-      doc.line(MX-2, 0, MX-2, PH);
 
       // ---- Cabeçalho verde ----
       doc.setFillColor(...GREEN);
@@ -1157,44 +1152,45 @@ function downloadPdf(){
       doc.text(titleLines[0], MX, 48);
 
       // Conteúdo
-      let y = 100;
+      let y = 95;
       doc.setFont('times','normal');
-      doc.setFontSize(12);
+      doc.setFontSize(11.5);
       doc.setTextColor(...INK);
 
       const bodyLines = pg.body.split('\n');
       bodyLines.forEach(rawLine => {
         if(rawLine.trim() === ''){
-          y += 10;
+          y += 7;
           return;
         }
-        const isBullet = rawLine.trim().startsWith('•') || rawLine.trim().startsWith('-');
 
-        // Verificar se é uma linha de destaque (datas entre •)
-        const isDate = /^\d{4}/.test(rawLine.trim()) && rawLine.length < 12;
+        // Subtítulo em MAIÚSCULO (ex: "INTRODUÇÃO", "HISTÓRIA")
+        const isSubtitle = rawLine.trim() === rawLine.trim().toUpperCase() && rawLine.trim().length > 2 && !/^\d/.test(rawLine.trim()) && !rawLine.trim().startsWith('•');
 
-        if(isDate){
-          // Badge de data
+        if(isSubtitle){
+          y += 4;
+          // Fundo verde escuro no subtítulo
           doc.setFillColor(...GREEN);
-          doc.roundedRect(MX, y-11, 45, 16, 3, 3, 'F');
+          doc.rect(MX, y-13, maxW, 18, 'F');
           doc.setFont('helvetica','bold');
           doc.setFontSize(9);
           doc.setTextColor(...WHITE);
-          doc.text(rawLine.trim(), MX+22, y, { align:'center' });
+          doc.text(rawLine.trim(), MX+6, y);
           doc.setFont('times','normal');
-          doc.setFontSize(12);
+          doc.setFontSize(11.5);
           doc.setTextColor(...INK);
-          y += 22;
+          y += 14;
           return;
         }
 
-        const indent = isBullet ? 12 : 0;
+        const isBullet = rawLine.trim().startsWith('•') || rawLine.trim().startsWith('-');
+        const indent = isBullet ? 10 : 0;
         const text = rawLine.replace(/^[-•]\s*/, '');
         const prefix = isBullet ? '•  ' : '';
         const lines = doc.splitTextToSize(prefix + text, maxW - indent);
 
         lines.forEach((line, li) => {
-          if(y > PH - 80){
+          if(y > PH - 58){
             footer(idx+2, totalPages);
             doc.addPage();
 
@@ -1202,9 +1198,6 @@ function downloadPdf(){
             doc.rect(0,0,PW,PH,'F');
             doc.setFillColor(235,228,208);
             doc.rect(MX-4,0,4,PH,'F');
-            doc.setDrawColor(220,80,80);
-            doc.setLineWidth(0.5);
-            doc.line(MX-2,0,MX-2,PH);
 
             doc.setFillColor(...GREEN);
             doc.rect(0,0,PW,68,'F');
@@ -1216,26 +1209,25 @@ function downloadPdf(){
             doc.setTextColor(...WHITE);
             doc.text(pg.title + ' (cont.)', MX, 44);
 
-            y = 100;
+            y = 95;
             doc.setFont('times','normal');
-            doc.setFontSize(12);
+            doc.setFontSize(11.5);
             doc.setTextColor(...INK);
           }
 
           if(isBullet && li === 0){
-            // Destaque leve nos bullets
             doc.setFillColor(240, 248, 243);
-            doc.rect(MX, y-12, maxW, 16, 'F');
+            doc.rect(MX, y-11, maxW, 15, 'F');
             doc.setTextColor(...GREEN);
             doc.text(line, MX + indent, y);
             doc.setTextColor(...INK);
           } else {
             doc.text(line, MX + indent, y);
           }
-          y += 20;
+          y += 17;
         });
 
-        y += 2; // espaço entre parágrafos
+        y += 2;
       });
 
       footer(idx+2, totalPages);
@@ -1284,26 +1276,39 @@ function flipTo(newIndex, dir){
   if(animating || newIndex < 0 || newIndex >= pages.length) return;
   animating = true;
 
-  base.innerHTML = renderPage(pages[newIndex], newIndex);
-  flip.innerHTML = renderPage(pages[current], current);
+  const goingTo = newIndex;
+  const leavingFrom = current;
+
+  // Base mostra destino imediatamente (fica atrás do flip)
+  base.innerHTML = renderPage(pages[goingTo], goingTo);
+
+  // Flip mostra a página atual que vai virar
+  flip.innerHTML = renderPage(pages[leavingFrom], leavingFrom);
   flip.style.transition = 'none';
   flip.style.transformOrigin = dir === 'next' ? 'left center' : 'right center';
   flip.style.transform = dir === 'next' ? 'rotateY(0deg)' : 'rotateY(-180deg)';
-  flip.style.boxShadow = dir === 'next' ? '10px 0 30px rgba(0,0,0,0.28)' : '-10px 0 30px rgba(0,0,0,0.28)';
+  flip.style.boxShadow = dir === 'next' ? '8px 0 24px rgba(0,0,0,0.25)' : '-8px 0 24px rgba(0,0,0,0.25)';
   flip.classList.add('visible');
 
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    flip.style.transition = 'transform 0.75s cubic-bezier(.45,.05,.55,.95), box-shadow 0.7s ease';
+  // Força reflow antes da transição para evitar piscada
+  flip.getBoundingClientRect();
+
+  requestAnimationFrame(() => {
+    flip.style.transition = 'transform 0.6s cubic-bezier(.45,.05,.55,.95), box-shadow 0.6s ease';
     flip.style.transform = dir === 'next' ? 'rotateY(-180deg)' : 'rotateY(0deg)';
     flip.style.boxShadow = '0 0 0 transparent';
-  }));
+  });
 
-  const onEnd = () => {
+  const onEnd = (e) => {
+    if(e.propertyName !== 'transform') return;
     flip.removeEventListener('transitionend', onEnd);
     flip.classList.remove('visible');
-    current = newIndex;
+    flip.style.transition = 'none';
+    current = goingTo;
     animating = false;
-    updateUI();
+    counter.textContent = `${current+1} / ${pages.length}`;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === pages.length - 1;
   };
   flip.addEventListener('transitionend', onEnd);
 }
@@ -1311,19 +1316,22 @@ function flipTo(newIndex, dir){
 prevBtn.addEventListener('click', () => flipTo(current-1, 'prev'));
 nextBtn.addEventListener('click', () => flipTo(current+1, 'next'));
 
-// Swipe touch
+// Swipe touch — só dispara se for swipe horizontal claro (não toque simples)
 const pageArea = document.querySelector('.page-area');
-let touchX = 0, touchActive = false;
+let touchX = 0, touchY = 0, touchActive = false;
 pageArea.addEventListener('touchstart', e => {
   if(animating) return;
   touchX = e.touches[0].clientX;
+  touchY = e.touches[0].clientY;
   touchActive = true;
 }, {passive:true});
 pageArea.addEventListener('touchend', e => {
   if(!touchActive) return;
   touchActive = false;
   const dx = e.changedTouches[0].clientX - touchX;
-  if(Math.abs(dx) > 45){
+  const dy = e.changedTouches[0].clientY - touchY;
+  // Só vira se o swipe for claramente horizontal (dx > 60) e não for toque simples (< 10px)
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > 10){
     if(dx < 0) flipTo(current+1, 'next');
     else flipTo(current-1, 'prev');
   }
