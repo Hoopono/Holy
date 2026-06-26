@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>A Copa do Mundo — Livro</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -15,85 +15,144 @@
     --paper-shadow:#e3d6b4;
     --ink:#2b2014;
     --grass:#1c6b3f;
+    --grass-light:#27a35a;
+    --green-dark:#0d3a1f;
   }
-  *{box-sizing:border-box;}
-  html{ height:100%; }
-  body{
-    margin:0;
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{
     width:100%;
     height:100%;
-    background:#060301;
-    font-family: Georgia, 'Times New Roman', serif;
-    color: var(--ink);
     overflow:hidden;
-  }
-  @media (prefers-reduced-motion: reduce){
-    *{transition-duration:0.01ms !important; animation-duration:0.01ms !important;}
+    font-family: Georgia, 'Times New Roman', serif;
   }
 
+  /* ===== CAMPO DE FUTEBOL DE FUNDO ===== */
   .stage{
-    position:absolute;
-    top:0; left:0; right:0; bottom:0;
-    width:100%;
-    height:100%;
+    position:fixed;
+    inset:0;
     display:flex;
     align-items:center;
     justify-content:center;
-    perspective: 2200px;
     overflow:hidden;
-    background: radial-gradient(ellipse at 50% 45%, #241509 0%, #120a04 55%, #060301 100%);
+    background: #051a0c;
   }
 
-  /* partículas ambientes douradas */
-  .spark{
-    position:absolute;
-    border-radius:50%;
-    background: var(--gold-light);
-    opacity:0;
-    pointer-events:none;
-    box-shadow: 0 0 6px 1px rgba(232,207,138,0.8);
-    animation: spark-float linear infinite;
-  }
-  @keyframes spark-float{
-    0%{ opacity:0; transform: translateY(0) scale(0.6); }
-    10%{ opacity:0.9; }
-    85%{ opacity:0.7; }
-    100%{ opacity:0; transform: translateY(-160px) scale(1); }
-  }
-
-  #sparks{
+  /* Campo SVG animado */
+  .field-bg{
     position:absolute;
     inset:0;
     width:100%;
     height:100%;
-    pointer-events:none;
+    object-fit:cover;
+    opacity:0.45;
+    animation: field-breathe 8s ease-in-out infinite;
+  }
+  @keyframes field-breathe{
+    0%,100%{ opacity:0.35; }
+    50%{ opacity:0.5; }
   }
 
-  /* feixe de luz girando atrás da capa */
+  /* Linhas do campo SVG inline */
+  .field-svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+
+  /* Spotlight dourado girando */
   .spotlight{
     position:absolute;
-    width:140vmax;
-    height:140vmax;
-    background: conic-gradient(from 0deg, transparent 0deg, rgba(203,161,53,0.10) 8deg, transparent 22deg, transparent 360deg);
-    animation: spin-slow 14s linear infinite;
+    width:180vmax;
+    height:180vmax;
+    background: conic-gradient(from 0deg,
+      transparent 0deg,
+      rgba(203,161,53,0.07) 6deg,
+      rgba(203,161,53,0.13) 12deg,
+      transparent 20deg,
+      transparent 180deg,
+      rgba(203,161,53,0.06) 186deg,
+      transparent 200deg,
+      transparent 360deg
+    );
+    animation: spin-slow 20s linear infinite;
     pointer-events:none;
+    z-index:2;
   }
   @keyframes spin-slow{
     from{ transform: rotate(0deg); }
     to{ transform: rotate(360deg); }
   }
 
-  /* ---------------- CAPA ---------------- */
+  /* Partículas douradas */
+  .sparks{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    z-index:3;
+  }
+  .spark{
+    position:absolute;
+    border-radius:50%;
+    background: var(--gold-light);
+    opacity:0;
+    box-shadow: 0 0 8px 2px rgba(232,207,138,0.9);
+    animation: spark-float linear infinite;
+  }
+  @keyframes spark-float{
+    0%{ opacity:0; transform: translateY(0) scale(0.5) rotate(0deg); }
+    15%{ opacity:1; }
+    85%{ opacity:0.6; }
+    100%{ opacity:0; transform: translateY(-200px) scale(1.2) rotate(180deg); }
+  }
+
+  /* Bolas flutuando */
+  .float-ball{
+    position:absolute;
+    font-size:1.8rem;
+    opacity:0;
+    animation: ball-float linear infinite;
+    pointer-events:none;
+    z-index:3;
+  }
+  @keyframes ball-float{
+    0%{ opacity:0; transform: translateY(0) rotate(0deg); }
+    10%{ opacity:0.5; }
+    90%{ opacity:0.3; }
+    100%{ opacity:0; transform: translateY(-300px) rotate(720deg); }
+  }
+
+  /* Confetes */
+  .confetti{
+    position:absolute;
+    width:8px;
+    height:8px;
+    opacity:0;
+    animation: confetti-fall linear infinite;
+    pointer-events:none;
+    z-index:3;
+  }
+  @keyframes confetti-fall{
+    0%{ opacity:0; transform: translateY(-20px) rotate(0deg); }
+    10%{ opacity:0.8; }
+    90%{ opacity:0.4; }
+    100%{ opacity:0; transform: translateY(100vh) rotate(720deg); }
+  }
+
+  /* ===== CAPA ===== */
   #cover{
-    width:min(92%, 540px);
-    height:min(88%, 720px);
+    position:relative;
+    z-index:10;
+    width:min(88vw, 420px);
+    height:min(90vh, 640px);
     background:
-      radial-gradient(circle at 30% 20%, #4a2f1c, var(--leather) 60%, var(--leather-dark) 100%);
+      radial-gradient(circle at 30% 20%, #5a3620, var(--leather) 55%, var(--leather-dark) 100%);
     border:10px solid var(--leather-dark);
-    border-radius:6px;
+    border-radius:6px 14px 14px 6px;
     box-shadow:
-      0 30px 60px rgba(0,0,0,0.6),
-      inset 0 0 40px rgba(0,0,0,0.5);
+      0 40px 80px rgba(0,0,0,0.8),
+      inset 0 0 60px rgba(0,0,0,0.4),
+      0 0 0 1px rgba(203,161,53,0.2);
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -102,109 +161,174 @@
     cursor:pointer;
     transform-origin: left center;
     transform-style: preserve-3d;
-    position:relative;
-    z-index:5;
     opacity:0;
-    transform: translateY(70px) scale(0.82) rotateX(18deg);
-    animation: cover-arrive 1.3s cubic-bezier(.16,.9,.25,1) 0.15s forwards;
+    transform: translateY(80px) scale(0.8) rotateX(22deg);
+    animation: cover-arrive 1.4s cubic-bezier(.16,.9,.25,1) 0.2s forwards;
+    overflow:hidden;
   }
   @keyframes cover-arrive{
-    0%{ opacity:0; transform: translateY(70px) scale(0.8) rotateX(20deg); filter: blur(6px); }
-    60%{ opacity:1; filter: blur(0); }
-    100%{ opacity:1; transform: translateY(0) scale(1) rotateX(0deg); filter: blur(0); }
+    0%{ opacity:0; transform: translateY(80px) scale(0.78) rotateX(24deg); filter:blur(8px); }
+    60%{ opacity:1; filter:blur(0); }
+    100%{ opacity:1; transform: translateY(0) scale(1) rotateX(0deg); filter:blur(0); }
   }
   #cover.opening{
-    animation: none;
-    transition: transform 1s cubic-bezier(.6,0,.4,1), box-shadow 1s ease;
-    transform: rotateY(-150deg);
-    box-shadow: 40px 30px 80px rgba(0,0,0,0.7);
+    animation:none;
+    transition: transform 1.1s cubic-bezier(.6,0,.4,1), box-shadow 1.1s ease, opacity 0.3s ease 0.8s;
+    transform: rotateY(-155deg);
+    box-shadow: 50px 30px 100px rgba(0,0,0,0.8);
   }
+
+  /* Bordas douradas internas */
   #cover::before{
     content:"";
     position:absolute;
-    inset:14px;
+    inset:16px;
     border:2px solid var(--gold);
-    border-radius:3px;
-    opacity:0.7;
+    border-radius:4px;
+    opacity:0.6;
+    pointer-events:none;
   }
-  /* brilho que percorre a capa ao chegar */
+  /* Brilho passante */
   #cover::after{
     content:"";
     position:absolute;
     inset:0;
-    background: linear-gradient(115deg, transparent 30%, rgba(255,238,190,0.35) 48%, transparent 62%);
-    transform: translateX(-120%);
-    animation: sheen 1.4s ease-out 1.0s 1;
+    background: linear-gradient(115deg, transparent 28%, rgba(255,240,200,0.4) 46%, transparent 64%);
+    transform: translateX(-130%);
+    animation: sheen 1.6s ease-out 1.1s 1;
     pointer-events:none;
   }
-  @keyframes sheen{
-    to{ transform: translateX(120%); }
+  @keyframes sheen{ to{ transform: translateX(130%); } }
+
+  /* Foto do Pelé / jogador na capa */
+  .cover-player-img{
+    position:absolute;
+    bottom:0;
+    right:0;
+    width:55%;
+    height:65%;
+    object-fit:cover;
+    object-position:top center;
+    opacity:0.18;
+    mask-image: linear-gradient(to left, rgba(0,0,0,0.7) 0%, transparent 100%),
+                linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 40%);
+    -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.7) 0%, transparent 100%);
   }
+
+  /* Padrão hexagonal da bola */
+  .cover-hex-pattern{
+    position:absolute;
+    inset:0;
+    opacity:0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52' viewBox='0 0 60 52'%3E%3Cpath d='M30 0 L60 15 L60 37 L30 52 L0 37 L0 15 Z' fill='none' stroke='%23e8cf8a' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 60px 52px;
+  }
+
+  .cover-top{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    position:relative;
+    z-index:2;
+  }
+
   .cover-emblem{
-    font-size:3.2rem;
-    margin-bottom:1.4rem;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    font-size:3.8rem;
+    margin-bottom:0.6rem;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
     opacity:0;
-    animation: emblem-pop 0.7s cubic-bezier(.34,1.6,.64,1) 0.9s forwards;
+    animation: emblem-pop 0.8s cubic-bezier(.34,1.7,.64,1) 1.0s forwards;
   }
   @keyframes emblem-pop{
-    0%{ opacity:0; transform: scale(0.3) rotate(-25deg); }
+    0%{ opacity:0; transform: scale(0.2) rotate(-30deg); }
     100%{ opacity:1; transform: scale(1) rotate(0deg); }
   }
+
+  .cover-flags{
+    display:flex;
+    gap:0.5rem;
+    margin-bottom:0.8rem;
+    font-size:1.5rem;
+    opacity:0;
+    animation: fade-rise 0.7s ease-out 1.7s forwards;
+  }
+
   #cover h1{
     color: var(--gold-light);
     text-transform:uppercase;
-    letter-spacing:0.12em;
-    font-size: clamp(1.6rem, 6vw, 2.4rem);
-    line-height:1.25;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-    padding: 0 1.5rem;
+    letter-spacing:0.14em;
+    font-size: clamp(1.7rem, 7vw, 2.6rem);
+    line-height:1.2;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.7), 0 0 30px rgba(203,161,53,0.3);
+    padding: 0 1.2rem;
     opacity:0;
-    animation: fade-rise 0.8s ease-out 1.05s forwards;
+    animation: fade-rise 0.8s ease-out 1.15s forwards;
+    position:relative;
+    z-index:2;
   }
-  #cover .line{
+  .cover-line{
     width:0;
     height:2px;
-    background: var(--gold);
-    margin:1.1rem 0;
-    opacity:0.8;
-    animation: line-grow 0.6s ease-out 1.55s forwards;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin:0.9rem 0;
+    animation: line-grow 0.7s ease-out 1.6s forwards;
+    position:relative;
+    z-index:2;
   }
-  @keyframes line-grow{ to{ width:70px; } }
-  #cover p.subtitle{
+  @keyframes line-grow{ to{ width:140px; } }
+
+  #cover .subtitle{
     color: var(--gold-light);
     opacity:0;
-    font-size:0.85rem;
-    letter-spacing:0.25em;
+    font-size:0.82rem;
+    letter-spacing:0.3em;
     text-transform:uppercase;
-    animation: fade-rise 0.7s ease-out 1.75s forwards;
+    animation: fade-rise 0.7s ease-out 1.85s forwards;
+    position:relative;
+    z-index:2;
   }
-  @keyframes fade-rise{
-    from{ opacity:0; transform: translateY(10px); }
-    to{ opacity:1; transform: translateY(0); }
+  #cover .author{
+    color: var(--gold);
+    opacity:0;
+    font-size:1.05rem;
+    letter-spacing:0.08em;
+    font-style:italic;
+    margin-top:0.4rem;
+    animation: fade-rise 0.7s ease-out 2.05s forwards;
+    position:relative;
+    z-index:2;
   }
   #cover .tap-hint{
-    margin-top:2.4rem;
+    margin-top:2rem;
     color: var(--gold-light);
-    font-size:0.78rem;
-    letter-spacing:0.15em;
+    font-size:0.76rem;
+    letter-spacing:0.18em;
     opacity:0;
-    animation: fade-rise 0.7s ease-out 2.1s forwards, pulse 2s ease-in-out 2.8s infinite;
+    animation: fade-rise 0.7s ease-out 2.5s forwards, pulse 2.2s ease-in-out 3.2s infinite;
+    position:relative;
+    z-index:2;
   }
   @keyframes pulse{
-    0%,100%{ opacity:0.4; }
-    50%{ opacity:0.9; }
+    0%,100%{ opacity:0.35; }
+    50%{ opacity:1; }
+  }
+  @keyframes fade-rise{
+    from{ opacity:0; transform: translateY(12px); }
+    to{ opacity:1; transform: translateY(0); }
   }
 
-  /* ---------------- LIVRO ---------------- */
+  /* ===== LIVRO ===== */
   #book{
-    width:min(96%, 600px);
-    height:min(92%, 740px);
-    position:relative;
+    position:absolute;
+    z-index:10;
+    width:min(96vw, 580px);
+    height:min(94vh, 720px);
     opacity:0;
-    transform: scale(0.85) translateY(10px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
+    transform: scale(0.85) translateY(14px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
     pointer-events:none;
+    display:flex;
+    flex-direction:column;
   }
   #book.show{
     opacity:1;
@@ -213,258 +337,404 @@
   }
 
   .page-area{
-    touch-action: pan-y;
+    flex:1;
     position:relative;
-    width:100%;
-    height:calc(100% - 56px);
-    border-radius: 4px 10px 10px 4px;
+    border-radius: 4px 12px 12px 4px;
     box-shadow:
-      0 25px 50px rgba(0,0,0,0.55),
-      inset -6px 0 12px rgba(0,0,0,0.12);
+      0 30px 60px rgba(0,0,0,0.65),
+      inset -8px 0 16px rgba(0,0,0,0.1),
+      4px 0 20px rgba(0,0,0,0.3);
     background: var(--paper-shadow);
     overflow:hidden;
+    perspective: 1200px;
   }
+
   .leaf{
     position:absolute;
     inset:0;
-    background:
-      linear-gradient(120deg, rgba(0,0,0,0.02) 0%, transparent 12%),
-      var(--paper);
-    padding: clamp(1.6rem, 4vw, 2.6rem) clamp(1.6rem, 4.5vw, 2.8rem);
-    overflow:auto;
-    backface-visibility: hidden;
+    background: var(--paper);
+    padding: clamp(1.4rem, 3.5vw, 2.2rem) clamp(1.5rem, 4vw, 2.5rem);
+    overflow-y:auto;
+    overflow-x:hidden;
+    backface-visibility:hidden;
+    -webkit-overflow-scrolling:touch;
   }
-  .leaf::-webkit-scrollbar{ width:6px; }
-  .leaf::-webkit-scrollbar-thumb{ background: var(--paper-shadow); border-radius:4px; }
+  .leaf::-webkit-scrollbar{ width:5px; }
+  .leaf::-webkit-scrollbar-thumb{ background: #d4c49a; border-radius:4px; }
+
+  /* Textura de papel */
+  .leaf::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 27px,
+        rgba(0,0,0,0.04) 27px,
+        rgba(0,0,0,0.04) 28px
+      );
+    pointer-events:none;
+    opacity:0.5;
+  }
+
+
+
+  /* Vinco central */
+  .page-area::before{
+    content:"";
+    position:absolute;
+    top:0; bottom:0; left:0;
+    width:22px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.22), transparent);
+    z-index:4;
+    pointer-events:none;
+  }
 
   #base{ z-index:1; }
   #flip{
     z-index:3;
     transform: rotateY(0deg);
-    box-shadow: none;
+    box-shadow:none;
     display:none;
   }
   #flip.visible{ display:block; }
 
+  /* ===== CONTEÚDO DAS PÁGINAS ===== */
   .page-tag{
-    font-size:0.7rem;
-    letter-spacing:0.25em;
+    font-size:0.68rem;
+    letter-spacing:0.28em;
     text-transform:uppercase;
     color: var(--grass);
-    margin-bottom:0.8rem;
+    margin-bottom:0.7rem;
     display:block;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-weight:700;
   }
   .leaf h2{
-    font-size: clamp(1.3rem, 4vw, 1.8rem);
+    font-size: clamp(1.2rem, 4vw, 1.65rem);
     font-weight:700;
-    margin: 0 0 1rem;
-    color:#1f1810;
-    line-height:1.15;
+    margin-bottom:0.85rem;
+    color:#1a120a;
+    line-height:1.18;
   }
   .leaf p{
-    font-size: clamp(0.92rem, 2vw, 1rem);
-    line-height:1.65;
-    margin-bottom:0.9rem;
+    font-size: clamp(0.9rem, 2.2vw, 0.98rem);
+    line-height:1.68;
+    margin-bottom:0.85rem;
     color:#3a2f20;
+    position:relative;
+    z-index:1;
   }
   .leaf ul{
-    margin:0 0 1rem 1.2rem;
-    font-size: clamp(0.92rem, 2vw, 1rem);
-    line-height:1.7;
+    margin:0 0 0.9rem 1.4rem;
+    font-size: clamp(0.9rem, 2.2vw, 0.97rem);
+    line-height:1.75;
     color:#3a2f20;
+    position:relative;
+    z-index:1;
   }
-  .leaf .big-icon{
-    font-size:2.4rem;
-    margin-bottom:0.6rem;
+  .leaf li{ margin-bottom:0.2rem; }
+  .leaf strong{ color:#1a120a; }
+
+  .folio{
+    position:absolute;
+    bottom:0.7rem;
+    right:1rem;
+    font-size:0.72rem;
+    color:#9a8c6e;
+    font-style:italic;
+    z-index:5;
   }
-  .leaf .center{
+
+  .center{
     text-align:center;
     height:100%;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
+    position:relative;
+    z-index:1;
   }
+  .big-icon{ font-size:2.6rem; margin-bottom:0.5rem; }
+
   .titles-row{
     display:flex;
     flex-wrap:wrap;
-    gap:0.5rem;
-    margin: 0.6rem 0 1rem;
+    gap:0.45rem;
+    margin:0.6rem 0 0.9rem;
+    justify-content:center;
   }
   .titles-row span{
     background: var(--grass);
     color:#fff;
-    padding:0.35rem 0.7rem;
+    padding:0.3rem 0.65rem;
     border-radius:5px;
     font-weight:700;
-    font-size:0.9rem;
+    font-size:0.88rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   }
+
   .rank-list{
     list-style:none;
-    margin:0.6rem 0;
+    margin:0.5rem 0;
     padding:0;
     display:flex;
     flex-direction:column;
-    gap:0.45rem;
+    gap:0.4rem;
+    position:relative;
+    z-index:1;
   }
   .rank-list li{
     display:flex;
     justify-content:space-between;
+    align-items:center;
     border-bottom:1px dashed var(--paper-shadow);
-    padding-bottom:0.4rem;
-    font-size:0.95rem;
+    padding:0.3rem 0;
+    font-size:0.92rem;
   }
-  .rank-list strong{ color: var(--grass); }
+  .rank-list strong{ color: var(--grass); font-weight:700; }
 
-  /* numeração de página, estilo livro impresso */
-  .leaf .folio{
-    position:absolute;
-    bottom:0.8rem;
-    right:1.2rem;
-    font-size:0.75rem;
-    color:#8a7c5e;
+  /* ===== FOTO DE JOGADOR NA PÁGINA ===== */
+  .player-photo{
+    width:100%;
+    height:160px;
+    object-fit:cover;
+    object-position: center top;
+    border-radius:6px;
+    margin:0.6rem 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    border:2px solid var(--paper-shadow);
+  }
+  .player-photo-small{
+    float:right;
+    width:90px;
+    height:110px;
+    object-fit:cover;
+    object-position: center top;
+    border-radius:5px;
+    margin: 0 0 0.5rem 0.8rem;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    border:2px solid var(--paper-shadow);
+    shape-outside: margin-box;
+  }
+
+  /* Placa de foto */
+  .photo-credit{
+    font-size:0.65rem;
+    color:#9a8c6e;
     font-style:italic;
+    margin-top:-0.3rem;
+    margin-bottom:0.6rem;
+    text-align:right;
   }
 
-  /* sombra de "vinco" central do livro */
-  .page-area::after{
-    content:"";
-    position:absolute;
-    top:0; bottom:0; left:0;
-    width:18px;
-    background: linear-gradient(90deg, rgba(0,0,0,0.18), transparent);
-    z-index:4;
-    pointer-events:none;
+  /* Destaque verde */
+  .highlight-box{
+    background: linear-gradient(135deg, #e8f5ee, #d4eddc);
+    border-left:3px solid var(--grass);
+    padding:0.6rem 0.8rem;
+    border-radius:0 6px 6px 0;
+    margin:0.5rem 0;
+    font-size:0.9rem;
+    color:#1a3d28;
+    position:relative;
+    z-index:1;
   }
 
-  /* ---------------- CONTROLES ---------------- */
+  /* Bandeirinha de Copa */
+  .stadium-badge{
+    display:inline-block;
+    background: var(--leather);
+    color: var(--gold-light);
+    padding:0.2rem 0.5rem;
+    border-radius:4px;
+    font-size:0.78rem;
+    font-weight:700;
+    letter-spacing:0.06em;
+    margin-bottom:0.5rem;
+  }
+
+  /* ===== CONTROLES ===== */
   .controls{
-    height:56px;
+    height:54px;
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding: 0 0.4rem;
+    padding:0 0.3rem;
+    flex-shrink:0;
   }
   .btn{
-    background: var(--leather);
+    background: linear-gradient(135deg, var(--leather), #2a1a0e);
     color: var(--gold-light);
     border:none;
-    width:42px;
-    height:42px;
+    width:44px;
+    height:44px;
     border-radius:50%;
-    font-size:1.1rem;
+    font-size:1.2rem;
     cursor:pointer;
     display:flex;
     align-items:center;
     justify-content:center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-    transition: transform 0.15s ease, opacity 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
   }
-  .btn:hover{ transform: translateY(-2px); }
-  .btn:disabled{ opacity:0.25; cursor:default; transform:none; }
+  .btn:hover:not(:disabled){ transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.5); }
+  .btn:active:not(:disabled){ transform: translateY(0); }
+  .btn:disabled{ opacity:0.22; cursor:default; }
   .counter{
     color: var(--gold-light);
     font-size:0.85rem;
-    letter-spacing:0.1em;
+    letter-spacing:0.12em;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
   }
 
+  /* ===== BOTÃO PDF ===== */
   .pdf-btn{
-    margin-top:1.6rem;
-    background: linear-gradient(135deg, var(--gold), #a87f24);
-    color: #2b1c08;
+    display:inline-flex;
+    align-items:center;
+    gap:0.5rem;
+    margin-top:1.2rem;
+    background: linear-gradient(135deg, #d4a520, #a87820, #d4a520);
+    background-size:200% 100%;
+    color:#1a0f04;
     border:none;
-    padding:0.8rem 1.6rem;
+    padding:0.75rem 1.5rem;
     border-radius:8px;
-    font-family: Georgia, serif;
+    font-family:Georgia,serif;
     font-weight:700;
-    font-size:0.95rem;
+    font-size:0.92rem;
     letter-spacing:0.04em;
     cursor:pointer;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: background-position 0.3s, transform 0.15s, box-shadow 0.15s;
+    animation: gold-shimmer 3s ease-in-out infinite;
   }
-  .pdf-btn:hover{
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  @keyframes gold-shimmer{
+    0%,100%{ background-position:0% 50%; }
+    50%{ background-position:100% 50%; }
   }
-  .pdf-btn:active{ transform: translateY(0); }
+  .pdf-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,0.35); }
 
-  /* overlay com livro ao gerar o PDF */
+  /* ===== OVERLAY PDF ===== */
   #pdfOverlay{
     position:fixed;
     inset:0;
-    background: rgba(6,3,1,0.82);
+    background: rgba(4,12,6,0.88);
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:50;
+    z-index:100;
     opacity:0;
     pointer-events:none;
     transition: opacity 0.35s ease;
+    backdrop-filter: blur(4px);
   }
-  #pdfOverlay.show{
-    opacity:1;
-    pointer-events:auto;
-  }
-  .pdf-book{
+  #pdfOverlay.show{ opacity:1; pointer-events:auto; }
+  .pdf-book-anim{
     display:flex;
     flex-direction:column;
     align-items:center;
+    gap:1rem;
     color: var(--gold-light);
   }
-  .pdf-book .icon{
-    font-size:4.2rem;
-    animation: book-flip 1.1s ease-in-out infinite;
-    filter: drop-shadow(0 8px 14px rgba(0,0,0,0.5));
+  .pdf-book-anim .icon{ font-size:4.5rem; animation: book-bounce 1s ease-in-out infinite; }
+  @keyframes book-bounce{
+    0%,100%{ transform: scale(1) translateY(0); }
+    50%{ transform: scale(1.1) translateY(-10px); }
   }
-  @keyframes book-flip{
-    0%{ transform: rotateY(0deg) scale(1); }
-    25%{ transform: rotateY(90deg) scale(1.05); }
-    50%{ transform: rotateY(180deg) scale(1); }
-    75%{ transform: rotateY(270deg) scale(1.05); }
-    100%{ transform: rotateY(360deg) scale(1); }
-  }
-  .pdf-book .label{
-    margin-top:1.1rem;
-    font-size:0.95rem;
+  .pdf-book-anim .label{
+    font-size:1rem;
     letter-spacing:0.12em;
     text-transform:uppercase;
-    opacity:0.9;
   }
-  .pdf-book .dots span{
-    animation: dot-blink 1.2s infinite;
+  .dots span{ animation: blink 1.4s step-start infinite; }
+  .dots span:nth-child(2){ animation-delay:0.2s; }
+  .dots span:nth-child(3){ animation-delay:0.4s; }
+  @keyframes blink{ 0%,80%,100%{opacity:1} 40%{opacity:0} }
+
+  /* ===== TROFEU FLUTUANTE ===== */
+  .trophy-float{
+    position:absolute;
+    pointer-events:none;
+    z-index:4;
+    font-size:2rem;
     opacity:0;
+    animation: trophy-orbit linear infinite;
   }
-  .pdf-book .dots span:nth-child(2){ animation-delay:0.2s; }
-  .pdf-book .dots span:nth-child(3){ animation-delay:0.4s; }
-  @keyframes dot-blink{
-    0%,100%{ opacity:0; }
-    50%{ opacity:1; }
-  }
-  .pdf-book .check{
-    font-size:2.6rem;
-    display:none;
-    animation: check-pop 0.5s cubic-bezier(.34,1.6,.64,1) forwards;
-  }
-  @keyframes check-pop{
-    0%{ transform: scale(0.4); opacity:0; }
-    100%{ transform: scale(1); opacity:1; }
+  @keyframes trophy-orbit{
+    0%{ opacity:0; transform: translateX(-100vw) rotate(0deg); }
+    5%{ opacity:0.6; }
+    95%{ opacity:0.4; }
+    100%{ opacity:0; transform: translateX(100vw) rotate(360deg); }
   }
 </style>
 </head>
 <body>
 
 <div class="stage" id="stage">
+
+  <!-- Campo de futebol SVG -->
+  <svg class="field-svg" viewBox="0 0 800 550" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <!-- Gramado base -->
+    <rect width="800" height="550" fill="#0a3d1a"/>
+    <!-- Listras de gramado -->
+    <rect x="0" y="0" width="80" height="550" fill="#0c4420" opacity="0.7"/>
+    <rect x="160" y="0" width="80" height="550" fill="#0c4420" opacity="0.7"/>
+    <rect x="320" y="0" width="80" height="550" fill="#0c4420" opacity="0.7"/>
+    <rect x="480" y="0" width="80" height="550" fill="#0c4420" opacity="0.7"/>
+    <rect x="640" y="0" width="80" height="550" fill="#0c4420" opacity="0.7"/>
+    <!-- Bordas do campo -->
+    <rect x="40" y="30" width="720" height="490" fill="none" stroke="#3aaa5a" stroke-width="3"/>
+    <!-- Linha do meio -->
+    <line x1="400" y1="30" x2="400" y2="520" stroke="#3aaa5a" stroke-width="2.5"/>
+    <!-- Círculo central -->
+    <circle cx="400" cy="275" r="80" fill="none" stroke="#3aaa5a" stroke-width="2.5"/>
+    <circle cx="400" cy="275" r="4" fill="#3aaa5a"/>
+    <!-- Área esquerda grande -->
+    <rect x="40" y="150" width="145" height="250" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <!-- Área direita grande -->
+    <rect x="615" y="150" width="145" height="250" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <!-- Área esquerda pequena -->
+    <rect x="40" y="205" width="55" height="140" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <!-- Área direita pequena -->
+    <rect x="705" y="205" width="55" height="140" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <!-- Pênalti esquerdo -->
+    <circle cx="125" cy="275" r="3" fill="#3aaa5a"/>
+    <!-- Pênalti direito -->
+    <circle cx="675" cy="275" r="3" fill="#3aaa5a"/>
+    <!-- Arcos de penalty -->
+    <path d="M185 220 A90 90 0 0 1 185 330" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <path d="M615 220 A90 90 0 0 0 615 330" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <!-- Cantos -->
+    <path d="M40 30 A14 14 0 0 1 54 44" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <path d="M760 30 A14 14 0 0 0 746 44" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <path d="M40 520 A14 14 0 0 0 54 506" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <path d="M760 520 A14 14 0 0 1 746 506" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <!-- Gols -->
+    <rect x="25" y="240" width="15" height="70" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+    <rect x="760" y="240" width="15" height="70" fill="none" stroke="#3aaa5a" stroke-width="2"/>
+  </svg>
+
   <div class="spotlight"></div>
-  <div id="sparks"></div>
+
+  <!-- Partículas -->
+  <div class="sparks" id="sparks"></div>
 
   <!-- CAPA -->
   <div id="cover">
-    <div class="cover-emblem">🏆</div>
-    <h1>A Copa<br>do Mundo</h1>
-    <div class="line"></div>
-    <p class="subtitle">Trabalho de Português</p>
-    <p class="tap-hint">toque para abrir o livro</p>
+    <div class="cover-hex-pattern"></div>
+    <div class="cover-top">
+      <div class="cover-emblem">🏆</div>
+      <div class="cover-flags">🇧🇷 ⚽ 🌍</div>
+      <h1>A Copa<br>do Mundo</h1>
+      <div class="cover-line"></div>
+      <p class="subtitle">Trabalho de Português</p>
+      <p class="author">José Armando</p>
+      <p class="tap-hint">toque para abrir o livro</p>
+    </div>
   </div>
 
   <!-- LIVRO -->
@@ -475,332 +745,615 @@
     </div>
     <div class="controls">
       <button class="btn" id="prevBtn" aria-label="Página anterior">‹</button>
-      <span class="counter" id="counter">1 / 10</span>
+      <span class="counter" id="counter">1 / 12</span>
       <button class="btn" id="nextBtn" aria-label="Próxima página">›</button>
     </div>
   </div>
 
 </div>
 
+<!-- OVERLAY PDF -->
 <div id="pdfOverlay">
-  <div class="pdf-book">
+  <div class="pdf-book-anim">
     <div class="icon" id="pdfIcon">📖</div>
-    <div class="label" id="pdfLabel">Gerando o livro em PDF<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <div class="label" id="pdfLabel">Gerando PDF bonito<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
   </div>
 </div>
 
 <script>
-  const pages = [
-    `<div class="center">
-       <span class="page-tag">Índice</span>
-       <h2>Sumário</h2>
-       <ul style="text-align:left">
-         <li>Introdução</li>
-         <li>História da Copa</li>
-         <li>Como funciona</li>
-         <li>Copa de 2026</li>
-         <li>O Brasil na Copa</li>
-         <li>Os maiores campeões</li>
-         <li>Curiosidades</li>
-         <li>Conclusão</li>
-       </ul>
-     </div>`,
-
-    `<span class="page-tag">01 · Introdução</span>
-     <h2>O maior campeonato do mundo</h2>
-     <p>A Copa do Mundo é o maior campeonato de futebol do planeta. Ela é organizada pela FIFA e acontece a cada quatro anos, reunindo as melhores seleções nacionais em busca do título de campeã mundial.</p>
-     <p>Além de ser um evento esportivo, a Copa também promove a união entre povos e culturas. Milhões de pessoas acompanham os jogos e celebram o esporte mais popular do mundo.</p>`,
-
-    `<span class="page-tag">02 · História</span>
-     <h2>Como tudo começou</h2>
-     <p>A primeira Copa do Mundo aconteceu em <strong>1930, no Uruguai</strong>. Apenas 13 seleções participaram, e o Uruguai foi o primeiro campeão da história.</p>
-     <p>Com o tempo, a Copa cresceu e ganhou grandes nomes, como Pelé, Maradona, Ronaldo Fenômeno, Zidane, Ronaldinho, Messi e Cristiano Ronaldo. Hoje reúne bilhões de telespectadores.</p>`,
-
-    `<span class="page-tag">03 · Formato</span>
-     <h2>Como funciona a competição</h2>
-     <p>Antes da Copa, as seleções disputam eliminatórias para garantir uma vaga. Na fase final, os países jogam em grupos e os melhores avançam para:</p>
-     <ul>
-       <li>Oitavas de final</li>
-       <li>Quartas de final</li>
-       <li>Semifinal</li>
-       <li>Disputa de 3º lugar</li>
-       <li>Final</li>
+// =================== PÁGINAS ===================
+const pages = [
+  // SUMÁRIO
+  `<div class="center">
+     <div class="big-icon">🏆</div>
+     <span class="page-tag">Índice</span>
+     <h2>Sumário</h2>
+     <ul style="text-align:left;margin:0.5rem 0 0.5rem 1rem;line-height:2">
+       <li>📖 Introdução</li>
+       <li>📜 História da Copa</li>
+       <li>⚙️ Como funciona</li>
+       <li>🌎 Copa de 2026</li>
+       <li>🇧🇷 O Brasil na Copa</li>
+       <li>🥇 Os maiores campeões</li>
+       <li>⚽ Maiores artilheiros</li>
+       <li>🏟️ Mascotes e estádios</li>
+       <li>💡 Curiosidades</li>
+       <li>✅ Conclusão</li>
      </ul>
-     <p>O vencedor da final é coroado campeão mundial e recebe a Taça da Copa.</p>`,
+     <p style="font-size:0.78rem;color:#8a7c5e;margin-top:0.5rem;font-style:italic">por José Armando</p>
+   </div>`,
 
-    `<span class="page-tag">04 · Edição atual</span>
-     <h2>A Copa do Mundo de 2026</h2>
-     <p>Pela primeira vez, o torneio será realizado em <strong>três países ao mesmo tempo</strong>: Estados Unidos, Canadá e México.</p>
-     <p>Outra novidade é o número de seleções: <strong>48 times</strong>, a maior Copa já realizada — mais jogos e mais chances para diferentes países disputarem o título.</p>`,
+  // INTRODUÇÃO
+  `<span class="page-tag">01 · Introdução</span>
+   <h2>O maior campeonato do mundo</h2>
+   <img class="player-photo" src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&q=80" alt="Torcida da Copa do Mundo" onerror="this.style.display='none'"/>
+   <p class="photo-credit">Estádio com torcida — Copa do Mundo</p>
+   <p>A <strong>Copa do Mundo</strong> é o maior campeonato de futebol do planeta. Organizada pela FIFA, acontece a cada quatro anos, reunindo as melhores seleções nacionais em busca do título de campeã mundial.</p>
+   <p>Além de esporte, a Copa promove a união entre povos e culturas. Bilhões de pessoas acompanham os jogos e celebram o esporte mais popular do mundo.</p>`,
 
-    `<span class="page-tag">05 · O Brasil</span>
-     <h2>O Brasil na Copa do Mundo</h2>
-     <p>O Brasil é a única seleção que participou de <strong>todas</strong> as edições da Copa e também é a maior campeã da história, com cinco títulos:</p>
-     <div class="titles-row">
-       <span>1958</span><span>1962</span><span>1970</span><span>1994</span><span>2002</span>
-     </div>
-     <p>Grandes nomes marcaram essa história: Pelé, Garrincha, Romário, Ronaldo, Rivaldo, Ronaldinho, Kaká e Neymar.</p>`,
+  // HISTÓRIA
+  `<span class="page-tag">02 · História</span>
+   <h2>Como tudo começou</h2>
+   <div class="highlight-box">🗓️ A primeira Copa do Mundo foi em <strong>1930, no Uruguai</strong>. Apenas 13 seleções participaram.</div>
+   <img class="player-photo" src="https://images.unsplash.com/photo-1551958219-acbc42a6add3?w=600&q=80" alt="Futebol história" onerror="this.style.display='none'"/>
+   <p>Com o tempo, a Copa cresceu e ganhou lendas como <strong>Pelé, Maradona, Ronaldo Fenômeno, Zidane, Ronaldinho, Messi e Cristiano Ronaldo</strong>.</p>
+   <p>Hoje reúne bilhões de telespectadores e é transmitida para praticamente todos os países do planeta.</p>`,
 
-    `<span class="page-tag">06 · Recordes</span>
-     <h2>Os maiores campeões</h2>
-     <ul class="rank-list">
-       <li>🥇 Brasil <strong>5 títulos</strong></li>
-       <li>🥈 Alemanha <strong>4 títulos</strong></li>
-       <li>🥈 Itália <strong>4 títulos</strong></li>
-       <li>🥉 Argentina <strong>3 títulos</strong></li>
-       <li>🏅 França <strong>2 títulos</strong></li>
-       <li>🏅 Uruguai <strong>2 títulos</strong></li>
-     </ul>`,
+  // COMO FUNCIONA
+  `<span class="page-tag">03 · Formato</span>
+   <h2>Como funciona a competição</h2>
+   <p>Antes da Copa, as seleções disputam <strong>eliminatórias</strong> para garantir uma vaga. Na fase final, os países jogam em grupos e os melhores avançam:</p>
+   <ul class="rank-list">
+     <li><span>1ª fase</span> <strong>Fase de Grupos</strong></li>
+     <li><span>2ª fase</span> <strong>Oitavas de final</strong></li>
+     <li><span>3ª fase</span> <strong>Quartas de final</strong></li>
+     <li><span>4ª fase</span> <strong>Semifinal</strong></li>
+     <li><span>5ª fase</span> <strong>Final 🏆</strong></li>
+   </ul>
+   <div class="highlight-box">⚽ O vencedor da final recebe a <strong>Taça FIFA da Copa do Mundo</strong>, feita de ouro e pesando cerca de 6 kg.</div>`,
 
-    `<span class="page-tag">07 · Curiosidades</span>
-     <h2>Você sabia?</h2>
-     <ul>
-       <li>A Copa acontece a cada quatro anos.</li>
-       <li>Mais de 200 países disputam as eliminatórias.</li>
-       <li>A taça pesa cerca de 6 kg e é feita de ouro.</li>
-       <li>É transmitida para quase todos os países do mundo.</li>
-       <li>É um dos eventos mais assistidos do planeta.</li>
-       <li>O Brasil é o único país presente em todas as edições.</li>
-     </ul>`,
+  // COPA 2026
+  `<span class="page-tag">04 · Edição Atual</span>
+   <h2>A Copa do Mundo de 2026</h2>
+   <div class="titles-row">
+     <span>🇺🇸 EUA</span><span>🇨🇦 Canadá</span><span>🇲🇽 México</span>
+   </div>
+   <img class="player-photo" src="https://images.unsplash.com/photo-1508098682722-e99c643e7f0b?w=600&q=80" alt="Estádio Copa 2026" onerror="this.style.display='none'"/>
+   <p>Pela primeira vez, o torneio será realizado em <strong>três países ao mesmo tempo</strong>: Estados Unidos, Canadá e México.</p>
+   <p>Outra novidade é o número de seleções: <strong>48 times</strong> — a maior Copa já realizada, com mais jogos e mais chances para diferentes nações.</p>`,
 
-    `<span class="page-tag">08 · Conclusão</span>
-     <h2>Muito mais que futebol</h2>
-     <p>A Copa do Mundo representa a união entre povos, culturas e tradições. Durante a competição, milhões de pessoas torcem por suas seleções e compartilham emoções.</p>
-     <p>Ela também incentiva valores importantes: respeito, trabalho em equipe, dedicação e superação — por isso é um dos maiores eventos do planeta.</p>`,
+  // BRASIL
+  `<span class="page-tag">05 · O Brasil</span>
+   <h2>O Brasil na Copa do Mundo</h2>
+   <p>O Brasil é a única seleção que participou de <strong>todas</strong> as edições da Copa e também é a <strong>maior campeã da história</strong>:</p>
+   <div class="titles-row">
+     <span>1958</span><span>1962</span><span>1970</span><span>1994</span><span>2002</span>
+   </div>
+   <img class="player-photo" src="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=600&q=80" alt="Torcida brasileira" onerror="this.style.display='none'"/>
+   <p>Grandes nomes marcaram essa história: <strong>Pelé, Garrincha, Romário, Ronaldo, Rivaldo, Ronaldinho, Kaká e Neymar</strong>.</p>`,
 
-    `<div class="center">
-       <div class="big-icon">🏆</div>
-       <h2>Fim</h2>
-       <p style="max-width:320px">Trabalho de Português sobre a Copa do Mundo.</p>
-       <p style="font-size:0.8rem;color:#8a7c5e;max-width:320px">
-         Referências: site oficial da FIFA · Enciclopédia Britannica · livros e materiais sobre a história da Copa do Mundo.
-       </p>
-       <button class="pdf-btn" id="downloadPdfBtn">⬇ Baixar PDF</button>
-     </div>`
-  ];
+  // CAMPEÕES
+  `<span class="page-tag">06 · Recordes</span>
+   <h2>Os maiores campeões 🏆</h2>
+   <ul class="rank-list">
+     <li>🥇 Brasil <strong>5 títulos</strong></li>
+     <li>🥈 Alemanha <strong>4 títulos</strong></li>
+     <li>🥈 Itália <strong>4 títulos</strong></li>
+     <li>🥉 Argentina <strong>3 títulos</strong></li>
+     <li>🏅 França <strong>2 títulos</strong></li>
+     <li>🏅 Uruguai <strong>2 títulos</strong></li>
+     <li>🏅 Inglaterra <strong>1 título</strong></li>
+     <li>🏅 Espanha <strong>1 título</strong></li>
+   </ul>
+   <div class="highlight-box">🌟 O Brasil é o único país com 5 títulos mundiais!</div>`,
 
-  // Conteúdo em texto puro, usado para gerar o PDF
-  const pdfContent = [
-    { title: "A Copa do Mundo", body: "Trabalho de Português" },
-    { title: "Sumário", body: "Introdução\nHistória da Copa\nComo funciona\nCopa de 2026\nO Brasil na Copa\nOs maiores campeões\nCuriosidades\nConclusão" },
-    { title: "1. Introdução", body: "A Copa do Mundo é o maior campeonato de futebol do planeta. Ela é organizada pela FIFA e acontece a cada quatro anos, reunindo as melhores seleções nacionais em busca do título de campeã mundial.\n\nAlém de ser um evento esportivo, a Copa também promove a união entre povos e culturas. Milhões de pessoas acompanham os jogos e celebram o esporte mais popular do mundo." },
-    { title: "2. História", body: "A primeira Copa do Mundo aconteceu em 1930, no Uruguai. Apenas 13 seleções participaram, e o Uruguai foi o primeiro campeão da história.\n\nCom o tempo, a Copa cresceu e ganhou grandes nomes, como Pelé, Maradona, Ronaldo Fenômeno, Zidane, Ronaldinho, Messi e Cristiano Ronaldo. Hoje reúne bilhões de telespectadores." },
-    { title: "3. Como funciona a competição", body: "Antes da Copa, as seleções disputam eliminatórias para garantir uma vaga. Na fase final, os países jogam em grupos e os melhores avançam para:\n\n- Oitavas de final\n- Quartas de final\n- Semifinal\n- Disputa de 3º lugar\n- Final\n\nO vencedor da final é coroado campeão mundial e recebe a Taça da Copa." },
-    { title: "4. A Copa do Mundo de 2026", body: "Pela primeira vez, o torneio será realizado em três países ao mesmo tempo: Estados Unidos, Canadá e México.\n\nOutra novidade é o número de seleções: 48 times, a maior Copa já realizada — mais jogos e mais chances para diferentes países disputarem o título." },
-    { title: "5. O Brasil na Copa do Mundo", body: "O Brasil é a única seleção que participou de todas as edições da Copa e também é a maior campeã da história, com cinco títulos: 1958, 1962, 1970, 1994 e 2002.\n\nGrandes nomes marcaram essa história: Pelé, Garrincha, Romário, Ronaldo, Rivaldo, Ronaldinho, Kaká e Neymar." },
-    { title: "6. Os maiores campeões", body: "1º Brasil — 5 títulos\n2º Alemanha — 4 títulos\n2º Itália — 4 títulos\n3º Argentina — 3 títulos\n4º França — 2 títulos\n4º Uruguai — 2 títulos" },
-    { title: "7. Curiosidades", body: "- A Copa acontece a cada quatro anos.\n- Mais de 200 países disputam as eliminatórias.\n- A taça pesa cerca de 6 kg e é feita de ouro.\n- É transmitida para quase todos os países do mundo.\n- É um dos eventos mais assistidos do planeta.\n- O Brasil é o único país presente em todas as edições." },
-    { title: "8. Conclusão", body: "A Copa do Mundo representa a união entre povos, culturas e tradições. Durante a competição, milhões de pessoas torcem por suas seleções e compartilham emoções.\n\nEla também incentiva valores importantes: respeito, trabalho em equipe, dedicação e superação — por isso é um dos maiores eventos do planeta." },
-    { title: "Referências", body: "Site oficial da FIFA\nEnciclopédia Britannica\nLivros e materiais sobre a história da Copa do Mundo" }
-  ];
+  // ARTILHEIROS
+  `<span class="page-tag">07 · Artilheiros</span>
+   <h2>Maiores artilheiros da história ⚽</h2>
+   <ul class="rank-list">
+     <li>🇩🇪 Miroslav Klose <strong>16 gols</strong></li>
+     <li>🇧🇷 Ronaldo Fenômeno <strong>15 gols</strong></li>
+     <li>🇩🇪 Gerd Müller <strong>14 gols</strong></li>
+     <li>🇦🇷 Lionel Messi <strong>13 gols</strong></li>
+     <li>🇫🇷 Just Fontaine <strong>13 gols</strong></li>
+     <li>🇧🇷 Pelé <strong>12 gols</strong></li>
+   </ul>
+   <div class="highlight-box">🏅 Just Fontaine marcou 13 gols em <em>uma única Copa</em> — 1958!</div>`,
 
-  // partículas douradas flutuando
-  const sparksEl = document.getElementById('sparks');
-  for(let i = 0; i < 26; i++){
-    const s = document.createElement('div');
-    s.className = 'spark';
-    const size = 2 + Math.random() * 3;
-    s.style.width = size + 'px';
-    s.style.height = size + 'px';
-    s.style.left = Math.random() * 100 + '%';
-    s.style.top = (60 + Math.random() * 40) + '%';
-    s.style.animationDuration = (5 + Math.random() * 6) + 's';
-    s.style.animationDelay = (Math.random() * 6) + 's';
-    sparksEl.appendChild(s);
-  }
+  // MASCOTES
+  `<span class="page-tag">08 · Símbolos</span>
+   <h2>Mascotes e Estádios 🏟️</h2>
+   <img class="player-photo" src="https://images.unsplash.com/photo-1431324155629-1a6dae1434d5?w=600&q=80" alt="Estádio de futebol" onerror="this.style.display='none'"/>
+   <p>Desde <strong>1966</strong>, cada Copa tem um mascote oficial. Alguns dos mais lembrados:</p>
+   <ul>
+     <li>🐺 <strong>Zabivaka</strong> — Rússia 2018</li>
+     <li>🌬️ <strong>La'eeb</strong> — Catar 2022</li>
+     <li>🐆 <strong>Fuleco</strong> — Brasil 2014</li>
+   </ul>
+   <p>O <strong>Maracanã</strong>, no Rio de Janeiro, é um dos templos do futebol mundial e já recebeu duas finais de Copa.</p>`,
 
-  function downloadPdf(){
-    const overlay = document.getElementById('pdfOverlay');
-    const icon = document.getElementById('pdfIcon');
-    const label = document.getElementById('pdfLabel');
-    overlay.classList.add('show');
+  // CURIOSIDADES
+  `<span class="page-tag">09 · Curiosidades</span>
+   <h2>Você sabia? 💡</h2>
+   <ul>
+     <li>⏰ A Copa acontece a cada <strong>quatro anos</strong>.</li>
+     <li>🌍 Mais de <strong>200 países</strong> disputam as eliminatórias.</li>
+     <li>🥇 A taça pesa cerca de <strong>6 kg</strong> e é feita de ouro.</li>
+     <li>📺 É transmitida para quase <strong>todos os países</strong> do mundo.</li>
+     <li>👁️ É um dos eventos mais <strong>assistidos do planeta</strong>.</li>
+     <li>🇧🇷 O Brasil está em <strong>todas as edições</strong> da Copa.</li>
+     <li>⚽ A bola oficial muda de modelo a cada edição.</li>
+     <li>🎵 O hino e a mascote ficam marcados para sempre.</li>
+   </ul>`,
 
-    setTimeout(() => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-      const marginX = 56;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const maxWidth = pageWidth - marginX * 2;
+  // CONCLUSÃO
+  `<span class="page-tag">10 · Conclusão</span>
+   <h2>Muito mais que futebol</h2>
+   <img class="player-photo" src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&q=80" alt="Celebração Copa do Mundo" onerror="this.style.display='none'"/>
+   <p>A Copa do Mundo representa a <strong>união entre povos, culturas e tradições</strong>. Durante a competição, milhões de pessoas torcem juntas e compartilham emoções.</p>
+   <p>Ela também incentiva valores importantes: <strong>respeito, trabalho em equipe, dedicação e superação</strong> — por isso é um dos maiores eventos do planeta.</p>`,
 
-      pdfContent.forEach((page, idx) => {
-        if(idx > 0) doc.addPage();
-        let y = 80;
+  // FIM + DOWNLOAD
+  `<div class="center">
+     <div class="big-icon">🏆⚽🌍</div>
+     <h2>Fim do Livro</h2>
+     <p style="max-width:300px;color:#5c4a30">Trabalho de Português sobre a Copa do Mundo FIFA.</p>
+     <p style="font-size:0.85rem;color:#5c6f63;font-style:italic;margin:0.3rem 0">por José Armando</p>
+     <p style="font-size:0.75rem;color:#8a7c5e;max-width:280px;margin:0.5rem 0 0">
+       Referências: FIFA.com · Enciclopédia Britannica · livros sobre a história da Copa do Mundo.
+     </p>
+     <button class="pdf-btn" id="downloadPdfBtn">📥 Baixar PDF Bonito</button>
+   </div>`
+];
 
-        doc.setFont('times', 'bold');
-        doc.setFontSize(20);
-        doc.setTextColor(28, 107, 63);
-        const titleLines = doc.splitTextToSize(page.title, maxWidth);
-        doc.text(titleLines, marginX, y);
-        y += titleLines.length * 26 + 16;
+// =================== CONTEÚDO PDF ===================
+const pdfContent = [
+  { title: "Sumário", body: "• Introdução\n• História da Copa\n• Como funciona\n• Copa de 2026\n• O Brasil na Copa\n• Os maiores campeões\n• Maiores artilheiros\n• Mascotes e estádios\n• Curiosidades\n• Conclusão" },
+  { title: "1. Introdução — O maior campeonato do mundo", body: "A Copa do Mundo é o maior campeonato de futebol do planeta. Organizada pela FIFA, acontece a cada quatro anos, reunindo as melhores seleções nacionais em busca do título de campeã mundial.\n\nAlém de esporte, a Copa promove a união entre povos e culturas. Bilhões de pessoas acompanham os jogos e celebram o esporte mais popular do mundo." },
+  { title: "2. História — Como tudo começou", body: "A primeira Copa do Mundo aconteceu em 1930, no Uruguai. Apenas 13 seleções participaram, e o Uruguai foi o primeiro campeão da história.\n\nCom o tempo, a Copa cresceu e ganhou lendas como Pelé, Maradona, Ronaldo Fenômeno, Zidane, Ronaldinho, Messi e Cristiano Ronaldo. Hoje reúne bilhões de telespectadores." },
+  { title: "3. Como funciona a competição", body: "Antes da Copa, as seleções disputam eliminatórias para garantir uma vaga. Na fase final, os países jogam em grupos e os melhores avançam:\n\n• Fase de Grupos\n• Oitavas de final\n• Quartas de final\n• Semifinal\n• Final\n\nO vencedor recebe a Taça FIFA, feita de ouro, pesando cerca de 6 kg." },
+  { title: "4. A Copa do Mundo de 2026", body: "Pela primeira vez, o torneio será realizado em três países ao mesmo tempo: Estados Unidos, Canadá e México.\n\nOutra novidade é o número de seleções: 48 times — a maior Copa já realizada, com mais jogos e mais chances para diferentes nações disputarem o título." },
+  { title: "5. O Brasil na Copa do Mundo", body: "O Brasil é a única seleção que participou de TODAS as edições da Copa e também é a maior campeã da história, com cinco títulos:\n\n1958 · 1962 · 1970 · 1994 · 2002\n\nGrandes nomes: Pelé, Garrincha, Romário, Ronaldo, Rivaldo, Ronaldinho, Kaká e Neymar." },
+  { title: "6. Os maiores campeões", body: "1º Brasil — 5 títulos\n2º Alemanha — 4 títulos\n2º Itália — 4 títulos\n3º Argentina — 3 títulos\n4º França — 2 títulos\n4º Uruguai — 2 títulos\n5º Inglaterra — 1 título\n5º Espanha — 1 título\n\nO Brasil é o único com 5 títulos mundiais!" },
+  { title: "7. Maiores artilheiros da história", body: "Miroslav Klose (Alemanha) — 16 gols\nRonaldo Fenômeno (Brasil) — 15 gols\nGerd Müller (Alemanha) — 14 gols\nLionel Messi (Argentina) — 13 gols\nJust Fontaine (França) — 13 gols\nPelé (Brasil) — 12 gols\n\nJust Fontaine marcou 13 gols em uma única Copa — em 1958!" },
+  { title: "8. Mascotes e Estádios", body: "Desde 1966, cada Copa tem um mascote oficial:\n\n• Zabivaka — Rússia 2018\n• La'eeb — Catar 2022\n• Fuleco — Brasil 2014\n\nO Maracanã, no Rio de Janeiro, é um dos maiores templos do futebol mundial e já recebeu duas finais de Copa do Mundo." },
+  { title: "9. Curiosidades", body: "• A Copa acontece a cada quatro anos.\n• Mais de 200 países disputam as eliminatórias.\n• A taça pesa cerca de 6 kg e é feita de ouro.\n• É transmitida para quase todos os países do mundo.\n• É um dos eventos mais assistidos do planeta.\n• O Brasil é o único país presente em todas as edições.\n• A bola oficial muda de modelo a cada edição do torneio.\n• O hino e a mascote ficam marcados na memória para sempre." },
+  { title: "10. Conclusão — Muito mais que futebol", body: "A Copa do Mundo representa a união entre povos, culturas e tradições. Durante a competição, milhões de pessoas torcem juntas e compartilham emoções.\n\nEla também incentiva valores importantes: respeito, trabalho em equipe, dedicação e superação — por isso é um dos maiores eventos do planeta." },
+  { title: "Referências", body: "• Site oficial da FIFA — FIFA.com\n• Enciclopédia Britannica\n• Livros e materiais sobre a história da Copa do Mundo" }
+];
 
-        doc.setDrawColor(203, 161, 53);
-        doc.setLineWidth(1.2);
-        doc.line(marginX, y - 8, marginX + 70, y - 8);
+// =================== PARTÍCULAS ===================
+const sparksEl = document.getElementById('sparks');
 
-        doc.setFont('times', 'normal');
-        doc.setFontSize(12.5);
-        doc.setTextColor(43, 32, 20);
+// Partículas douradas
+for(let i = 0; i < 30; i++){
+  const s = document.createElement('div');
+  s.className = 'spark';
+  const size = 2 + Math.random() * 4;
+  s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${55+Math.random()*45}%;animation-duration:${5+Math.random()*7}s;animation-delay:${Math.random()*7}s`;
+  sparksEl.appendChild(s);
+}
 
-        page.body.split('\n').forEach(rawLine => {
-          if(rawLine.trim() === ''){
-            y += 12;
-            return;
+// Bolas de futebol flutuando
+for(let i = 0; i < 6; i++){
+  const b = document.createElement('div');
+  b.className = 'float-ball';
+  b.textContent = '⚽';
+  b.style.cssText = `left:${5+Math.random()*90}%;top:${60+Math.random()*35}%;animation-duration:${12+Math.random()*10}s;animation-delay:${Math.random()*10}s;font-size:${1.2+Math.random()*1.2}rem;`;
+  sparksEl.appendChild(b);
+}
+
+// Confetes coloridos
+const confColors = ['#cba135','#27a35a','#e8cf8a','#ffffff','#1c6b3f','#f4d03f'];
+for(let i = 0; i < 18; i++){
+  const c = document.createElement('div');
+  c.className = 'confetti';
+  const color = confColors[Math.floor(Math.random()*confColors.length)];
+  c.style.cssText = `left:${Math.random()*100}%;top:-5%;background:${color};border-radius:${Math.random()>0.5?'50%':'2px'};width:${4+Math.random()*8}px;height:${4+Math.random()*8}px;animation-duration:${8+Math.random()*10}s;animation-delay:${Math.random()*8}s;`;
+  sparksEl.appendChild(c);
+}
+
+// =================== GERAR PDF ===================
+function downloadPdf(){
+  const overlay = document.getElementById('pdfOverlay');
+  const icon = document.getElementById('pdfIcon');
+  const label = document.getElementById('pdfLabel');
+  overlay.classList.add('show');
+
+  setTimeout(() => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4', orientation:'portrait' });
+    const PW = doc.internal.pageSize.getWidth();
+    const PH = doc.internal.pageSize.getHeight();
+    const MX = 60;
+    const maxW = PW - MX*2;
+
+    const GREEN  = [12, 80, 35];
+    const DGREEN = [7, 50, 22];
+    const GOLD   = [203, 161, 53];
+    const GOLD2  = [232, 207, 138];
+    const CREAM  = [246, 239, 221];
+    const INK    = [43, 32, 20];
+    const MUTED  = [140, 128, 100];
+    const WHITE  = [255, 255, 255];
+
+    // ---- Desenhar campo miniatura no fundo (decorativo) ----
+    const drawFieldWatermark = () => {
+      doc.setFillColor(240, 248, 244);
+      // linhas sutis do campo
+      doc.setDrawColor(180, 210, 190);
+      doc.setLineWidth(0.5);
+      doc.setGState && doc.setGState({ opacity: 0.15 });
+    };
+
+    // ---- Rodapé ----
+    const footer = (pg, total) => {
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(0.8);
+      doc.line(MX, PH-50, PW-MX, PH-50);
+      // Taça esquerda
+      doc.setFontSize(9);
+      doc.setTextColor(...GOLD);
+      doc.text('🏆', MX, PH-34);
+      doc.setFont('helvetica','italic');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...MUTED);
+      doc.text('A Copa do Mundo · José Armando', MX+14, PH-34);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8.5);
+      doc.text(`${pg} / ${total}`, PW-MX, PH-34, { align:'right' });
+    };
+
+    // ==============================
+    // CAPA PDF
+    // ==============================
+    // Fundo verde escuro (campo)
+    doc.setFillColor(...DGREEN);
+    doc.rect(0, 0, PW, PH, 'F');
+
+    // Listras do gramado
+    for(let i=0;i<PW;i+=60){
+      doc.setFillColor(i%120===0 ? 10:15, i%120===0?55:70, i%120===0?25:35);
+      doc.rect(i, 0, 60, PH, 'F');
+    }
+
+    // Linhas do campo no fundo
+    doc.setDrawColor(30, 120, 65);
+    doc.setLineWidth(1.2);
+    // Borda
+    doc.rect(25, 25, PW-50, PH-50);
+    // Linha do meio
+    doc.line(25, PH/2, PW-25, PH/2);
+    // Círculo central
+    doc.setDrawColor(30,120,65);
+    doc.circle(PW/2, PH/2, 50, 'S');
+    // Áreas
+    doc.rect(25, PH/2-80, 90, 160);
+    doc.rect(PW-115, PH/2-80, 90, 160);
+
+    // Borda dourada dupla
+    doc.setDrawColor(...GOLD);
+    doc.setLineWidth(2);
+    doc.rect(30, 30, PW-60, PH-60);
+    doc.setLineWidth(0.8);
+    doc.rect(38, 38, PW-76, PH-76);
+
+    // Faixa escura central para textos
+    doc.setFillColor(5, 18, 10);
+    doc.setGState ? null : null;
+    // Degradê simulado com retângulos
+    for(let y=PH*0.2;y<PH*0.82;y+=2){
+      const alpha = Math.min(1, (y-PH*0.2)/(PH*0.08)) * Math.min(1,(PH*0.82-y)/(PH*0.08));
+      doc.setFillColor(5,18,10);
+      doc.rect(0, y, PW, 2, 'F');
+    }
+    doc.setFillColor(5,18,10);
+    doc.rect(0, PH*0.22, PW, PH*0.58, 'F');
+
+    // Linha dourada topo
+    doc.setFillColor(...GOLD);
+    doc.rect(0, PH*0.22, PW, 3, 'F');
+    // Linha dourada baixo
+    doc.rect(0, PH*0.8, PW, 3, 'F');
+
+    // "TRABALHO DE PORTUGUÊS"
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...GOLD);
+    doc.text('TRABALHO DE PORTUGUÊS', PW/2, PH*0.31, { align:'center', charSpace:3 });
+
+    // Linha separadora
+    doc.setDrawColor(...GOLD2);
+    doc.setLineWidth(0.5);
+    doc.line(PW/2-60, PH*0.335, PW/2+60, PH*0.335);
+
+    // Título principal
+    doc.setFont('times', 'bold');
+    doc.setFontSize(52);
+    doc.setTextColor(...CREAM);
+    doc.text('A COPA', PW/2, PH*0.44, { align:'center' });
+    doc.text('DO MUNDO', PW/2, PH*0.52, { align:'center' });
+
+    // Linha dourada
+    doc.setFillColor(...GOLD);
+    doc.rect(PW/2-55, PH*0.545, 110, 2, 'F');
+
+    // Ano / édição
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(11);
+    doc.setTextColor(...GOLD2);
+    doc.text('FIFA · FUTEBOL · NAÇÕES', PW/2, PH*0.6, { align:'center', charSpace:2 });
+
+    // Autor
+    doc.setFont('times','italic');
+    doc.setFontSize(16);
+    doc.setTextColor(...GOLD);
+    doc.text('José Armando', PW/2, PH*0.67, { align:'center' });
+
+    // Decoração — bola
+    doc.setFontSize(36);
+    doc.setTextColor(...GOLD2);
+    doc.text('⚽', PW/2, PH*0.15, { align:'center' });
+
+    // Bandeiras
+    doc.setFontSize(20);
+    doc.text('🇧🇷  🌍  🏆', PW/2, PH*0.78, { align:'center' });
+
+    const totalContent = pdfContent.length;
+    const totalPages = totalContent + 1;
+
+    // ==============================
+    // PÁGINAS DE CONTEÚDO
+    // ==============================
+    pdfContent.forEach((pg, idx) => {
+      doc.addPage();
+
+      // Fundo creme suave
+      doc.setFillColor(...CREAM);
+      doc.rect(0, 0, PW, PH, 'F');
+
+      // Margem de papel com sombra
+      doc.setFillColor(235, 228, 208);
+      doc.rect(MX-4, 0, 4, PH, 'F');
+
+      // Linha vermelha de margem (caderno)
+      doc.setDrawColor(220, 80, 80);
+      doc.setLineWidth(0.5);
+      doc.line(MX-2, 0, MX-2, PH);
+
+      // ---- Cabeçalho verde ----
+      doc.setFillColor(...GREEN);
+      doc.rect(0, 0, PW, 68, 'F');
+      // Detalhe dourado no cabeçalho
+      doc.setFillColor(...GOLD);
+      doc.rect(0, 68, PW, 3, 'F');
+      // Listras decorativas no cabeçalho
+      doc.setFillColor(...DGREEN);
+      for(let x=0;x<PW;x+=20){
+        doc.rect(x, 0, 10, 68, 'F');
+      }
+      // Texto do cabeçalho sobre listras
+      doc.setFillColor(...GREEN);
+      doc.rect(0, 0, PW, 68, 'F');
+      doc.setFillColor(...GOLD);
+      doc.rect(0, 65, PW, 3, 'F');
+
+      // Número da seção
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...GOLD);
+      const sectionLabel = `SEÇÃO ${idx+1} / ${totalContent}`;
+      doc.text(sectionLabel, MX, 18, { charSpace:2 });
+
+      // Título da página
+      doc.setFont('times','bold');
+      doc.setFontSize(20);
+      doc.setTextColor(...WHITE);
+      const titleLines = doc.splitTextToSize(pg.title, maxW);
+      doc.text(titleLines[0], MX, 48);
+
+      // Conteúdo
+      let y = 100;
+      doc.setFont('times','normal');
+      doc.setFontSize(12);
+      doc.setTextColor(...INK);
+
+      const bodyLines = pg.body.split('\n');
+      bodyLines.forEach(rawLine => {
+        if(rawLine.trim() === ''){
+          y += 10;
+          return;
+        }
+        const isBullet = rawLine.trim().startsWith('•') || rawLine.trim().startsWith('-');
+
+        // Verificar se é uma linha de destaque (datas entre •)
+        const isDate = /^\d{4}/.test(rawLine.trim()) && rawLine.length < 12;
+
+        if(isDate){
+          // Badge de data
+          doc.setFillColor(...GREEN);
+          doc.roundedRect(MX, y-11, 45, 16, 3, 3, 'F');
+          doc.setFont('helvetica','bold');
+          doc.setFontSize(9);
+          doc.setTextColor(...WHITE);
+          doc.text(rawLine.trim(), MX+22, y, { align:'center' });
+          doc.setFont('times','normal');
+          doc.setFontSize(12);
+          doc.setTextColor(...INK);
+          y += 22;
+          return;
+        }
+
+        const indent = isBullet ? 12 : 0;
+        const text = rawLine.replace(/^[-•]\s*/, '');
+        const prefix = isBullet ? '•  ' : '';
+        const lines = doc.splitTextToSize(prefix + text, maxW - indent);
+
+        lines.forEach((line, li) => {
+          if(y > PH - 80){
+            footer(idx+2, totalPages);
+            doc.addPage();
+
+            doc.setFillColor(...CREAM);
+            doc.rect(0,0,PW,PH,'F');
+            doc.setFillColor(235,228,208);
+            doc.rect(MX-4,0,4,PH,'F');
+            doc.setDrawColor(220,80,80);
+            doc.setLineWidth(0.5);
+            doc.line(MX-2,0,MX-2,PH);
+
+            doc.setFillColor(...GREEN);
+            doc.rect(0,0,PW,68,'F');
+            doc.setFillColor(...GOLD);
+            doc.rect(0,65,PW,3,'F');
+
+            doc.setFont('times','bold');
+            doc.setFontSize(16);
+            doc.setTextColor(...WHITE);
+            doc.text(pg.title + ' (cont.)', MX, 44);
+
+            y = 100;
+            doc.setFont('times','normal');
+            doc.setFontSize(12);
+            doc.setTextColor(...INK);
           }
-          const lines = doc.splitTextToSize(rawLine, maxWidth);
-          lines.forEach(line => {
-            if(y > pageHeight - 70){
-              doc.addPage();
-              y = 80;
-            }
-            doc.text(line, marginX, y);
-            y += 19;
-          });
+
+          if(isBullet && li === 0){
+            // Destaque leve nos bullets
+            doc.setFillColor(240, 248, 243);
+            doc.rect(MX, y-12, maxW, 16, 'F');
+            doc.setTextColor(...GREEN);
+            doc.text(line, MX + indent, y);
+            doc.setTextColor(...INK);
+          } else {
+            doc.text(line, MX + indent, y);
+          }
+          y += 20;
         });
 
-        doc.setFontSize(9);
-        doc.setTextColor(150, 140, 110);
-        doc.text(`${idx + 1} / ${pdfContent.length}`, pageWidth - marginX - 30, pageHeight - 30);
+        y += 2; // espaço entre parágrafos
       });
 
-      doc.save('a-copa-do-mundo.pdf');
-
-      icon.style.animation = 'none';
-      icon.textContent = '✅';
-      label.innerHTML = 'PDF baixado!';
-
-      setTimeout(() => {
-        overlay.classList.remove('show');
-        icon.style.animation = '';
-        icon.textContent = '📖';
-        label.innerHTML = 'Gerando o livro em PDF<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
-      }, 1100);
-    }, 1300);
-  }
-
-  document.addEventListener('click', (e) => {
-    if(e.target && e.target.id === 'downloadPdfBtn'){
-      downloadPdf();
-    }
-  });
-
-  const cover = document.getElementById('cover');
-  const book = document.getElementById('book');
-  const base = document.getElementById('base');
-  const flip = document.getElementById('flip');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const counter = document.getElementById('counter');
-
-  let current = 0;
-  let animating = false;
-
-  function renderFolio(html, index){
-    return html + `<span class="folio">${index + 1} / ${pages.length}</span>`;
-  }
-
-  function updateUI(){
-    base.innerHTML = renderFolio(pages[current], current);
-    counter.textContent = `${current + 1} / ${pages.length}`;
-    prevBtn.disabled = current === 0;
-    nextBtn.disabled = current === pages.length - 1;
-  }
-
-  function flipTo(newIndex, direction){
-    if(animating || newIndex < 0 || newIndex > pages.length - 1) return;
-    animating = true;
-
-    const leavingIndex = current;
-    base.innerHTML = renderFolio(pages[newIndex], newIndex);
-
-    flip.innerHTML = renderFolio(pages[leavingIndex], leavingIndex);
-    flip.style.transition = 'none';
-    flip.style.transformOrigin = direction === 'next' ? 'left center' : 'right center';
-    flip.style.transform = direction === 'next' ? 'rotateY(0deg)' : 'rotateY(-180deg)';
-    flip.style.boxShadow = direction === 'next' ? '10px 0 30px rgba(0,0,0,0.25)' : '-10px 0 30px rgba(0,0,0,0.25)';
-    flip.classList.add('visible');
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        flip.style.transition = 'transform 0.75s cubic-bezier(.45,.05,.55,.95), box-shadow 0.75s ease';
-        flip.style.transform = direction === 'next' ? 'rotateY(-180deg)' : 'rotateY(0deg)';
-        flip.style.boxShadow = '0 0 0 rgba(0,0,0,0)';
-      });
+      footer(idx+2, totalPages);
     });
 
-    const onEnd = () => {
-      flip.removeEventListener('transitionend', onEnd);
-      flip.classList.remove('visible');
-      current = newIndex;
-      animating = false;
-      updateUI();
-    };
-    flip.addEventListener('transitionend', onEnd);
-  }
+    doc.save('a-copa-do-mundo.pdf');
 
-  prevBtn.addEventListener('click', () => flipTo(current - 1, 'prev'));
-  nextBtn.addEventListener('click', () => flipTo(current + 1, 'next'));
+    icon.textContent = '✅';
+    label.innerHTML = 'PDF baixado com sucesso!';
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      icon.textContent = '📖';
+      label.innerHTML = 'Gerando PDF bonito<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
+    }, 1400);
+  }, 1200);
+}
 
-  // deslizar com o dedo para virar a página
-  const pageArea = document.querySelector('.page-area');
-  let touchStartX = 0, touchStartY = 0, touchActive = false;
+// =================== CONTROLES DO LIVRO ===================
+document.addEventListener('click', e => {
+  if(e.target && e.target.id === 'downloadPdfBtn') downloadPdf();
+});
 
-  pageArea.addEventListener('touchstart', (e) => {
-    if(animating) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    touchActive = true;
-  }, { passive: true });
+const cover   = document.getElementById('cover');
+const book    = document.getElementById('book');
+const base    = document.getElementById('base');
+const flip    = document.getElementById('flip');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const counter = document.getElementById('counter');
 
-  pageArea.addEventListener('touchend', (e) => {
-    if(!touchActive) return;
-    touchActive = false;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
-    const SWIPE_MIN = 45;
-    if(Math.abs(dx) > SWIPE_MIN && Math.abs(dx) > Math.abs(dy) * 1.4){
-      if(dx < 0) flipTo(current + 1, 'next');
-      else flipTo(current - 1, 'prev');
-    }
-  }, { passive: true });
+let current = 0;
+let animating = false;
 
-  // arrastar com o mouse (desktop) também vira a página
-  let mouseStartX = 0, mouseDown = false;
-  pageArea.addEventListener('mousedown', (e) => {
-    if(animating) return;
-    mouseStartX = e.clientX;
-    mouseDown = true;
-  });
-  window.addEventListener('mouseup', (e) => {
-    if(!mouseDown) return;
-    mouseDown = false;
-    const dx = e.clientX - mouseStartX;
-    if(Math.abs(dx) > 60){
-      if(dx < 0) flipTo(current + 1, 'next');
-      else flipTo(current - 1, 'prev');
-    }
-  });
+function renderPage(html, index){
+  return html + `<span class="folio">${index+1} / ${pages.length}</span>`;
+}
 
-  document.addEventListener('keydown', (e) => {
-    if(book.classList.contains('show')){
-      if(e.key === 'ArrowRight') flipTo(current + 1, 'next');
-      if(e.key === 'ArrowLeft') flipTo(current - 1, 'prev');
-    }
-  });
+function updateUI(){
+  base.innerHTML = renderPage(pages[current], current);
+  counter.textContent = `${current+1} / ${pages.length}`;
+  prevBtn.disabled = current === 0;
+  nextBtn.disabled = current === pages.length - 1;
+}
 
-  // abrir a capa
-  cover.addEventListener('click', () => {
-    if(cover.classList.contains('opening')) return;
-    cover.classList.add('opening');
+function flipTo(newIndex, dir){
+  if(animating || newIndex < 0 || newIndex >= pages.length) return;
+  animating = true;
+
+  base.innerHTML = renderPage(pages[newIndex], newIndex);
+  flip.innerHTML = renderPage(pages[current], current);
+  flip.style.transition = 'none';
+  flip.style.transformOrigin = dir === 'next' ? 'left center' : 'right center';
+  flip.style.transform = dir === 'next' ? 'rotateY(0deg)' : 'rotateY(-180deg)';
+  flip.style.boxShadow = dir === 'next' ? '10px 0 30px rgba(0,0,0,0.28)' : '-10px 0 30px rgba(0,0,0,0.28)';
+  flip.classList.add('visible');
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    flip.style.transition = 'transform 0.75s cubic-bezier(.45,.05,.55,.95), box-shadow 0.7s ease';
+    flip.style.transform = dir === 'next' ? 'rotateY(-180deg)' : 'rotateY(0deg)';
+    flip.style.boxShadow = '0 0 0 transparent';
+  }));
+
+  const onEnd = () => {
+    flip.removeEventListener('transitionend', onEnd);
+    flip.classList.remove('visible');
+    current = newIndex;
+    animating = false;
     updateUI();
-    setTimeout(() => {
-      book.classList.add('show');
-    }, 350);
-    setTimeout(() => {
-      cover.style.display = 'none';
-    }, 1050);
-  });
-</script>
+  };
+  flip.addEventListener('transitionend', onEnd);
+}
 
+prevBtn.addEventListener('click', () => flipTo(current-1, 'prev'));
+nextBtn.addEventListener('click', () => flipTo(current+1, 'next'));
+
+// Swipe touch
+const pageArea = document.querySelector('.page-area');
+let touchX = 0, touchActive = false;
+pageArea.addEventListener('touchstart', e => {
+  if(animating) return;
+  touchX = e.touches[0].clientX;
+  touchActive = true;
+}, {passive:true});
+pageArea.addEventListener('touchend', e => {
+  if(!touchActive) return;
+  touchActive = false;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if(Math.abs(dx) > 45){
+    if(dx < 0) flipTo(current+1, 'next');
+    else flipTo(current-1, 'prev');
+  }
+}, {passive:true});
+
+// Mouse drag
+let mouseX = 0, mouseDown = false;
+pageArea.addEventListener('mousedown', e => { mouseX = e.clientX; mouseDown = true; });
+window.addEventListener('mouseup', e => {
+  if(!mouseDown) return;
+  mouseDown = false;
+  const dx = e.clientX - mouseX;
+  if(Math.abs(dx) > 55){
+    if(dx < 0) flipTo(current+1, 'next');
+    else flipTo(current-1, 'prev');
+  }
+});
+
+// Teclado
+document.addEventListener('keydown', e => {
+  if(book.classList.contains('show')){
+    if(e.key==='ArrowRight') flipTo(current+1,'next');
+    if(e.key==='ArrowLeft')  flipTo(current-1,'prev');
+  }
+});
+
+// Abrir capa
+cover.addEventListener('click', () => {
+  if(cover.classList.contains('opening')) return;
+  cover.classList.add('opening');
+  updateUI();
+  setTimeout(() => book.classList.add('show'), 380);
+  setTimeout(() => cover.style.display='none', 1100);
+});
+</script>
 </body>
 </html>
